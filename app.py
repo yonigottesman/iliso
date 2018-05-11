@@ -65,7 +65,7 @@ app.layout = html.Div(children=[
     ),
      dcc.Interval(
             id='interval-component',
-            interval=1*1000, # in milliseconds
+            interval=60*1000, # in milliseconds
             n_intervals=0
         )
 ])
@@ -80,7 +80,6 @@ def update_graph_live(n):
         x = []
         y = []
         for sample in motion_feed.samples:
-            print(sample)
             x.append(sample.time)
             y.append(sample.value)
     
