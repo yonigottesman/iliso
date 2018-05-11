@@ -8,7 +8,7 @@ from dash.dependencies import Input, Output
 from flask import Flask,request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-
+import plotly.graph_objs as go
 
 app = dash.Dash(__name__)
 server = app.server # the Flask app
@@ -65,7 +65,7 @@ app.layout = html.Div(children=[
     ),
      dcc.Interval(
             id='interval-component',
-            interval=60*1000, # in milliseconds
+            interval=1*1000, # in milliseconds
             n_intervals=0
         )
 ])
@@ -73,25 +73,34 @@ app.layout = html.Div(children=[
 @app.callback(Output('coverage-graph', 'figure'),
               [Input('interval-component', 'n_intervals')])
 def update_graph_live(n):
-
-
-    motion_feed = Feed.query.filter_by(name='motion').first()
-    if motion_feed is not None:
-        x = []
-        y = []
-        for sample in motion_feed.samples:
-            x.append(sample.time)
-            y.append(sample.value)
     
-        figure={
-            'data': [
-                {'x': x, 'y': y, 'type': 'bar', 'name': 'SF'},
-            ],
-            'layout': {
-                'title': 'Coverage'
-            }
-        }
-        return figure
+    motion_feed = Feed.query.filter_by(name='motion').first()
+    if motion_feed is None:
+        return
+
+    x = []
+    y = []
+    for sample in motion_feed.samples:
+        x.append(sample.time)
+        y.append(sample.value)
+
+    data = go.Scatter(
+        x = x,
+        y = y,
+        name = 'motion',
+        mode = 'line'
+    )
+
+    layout = dict(title = 'motion',
+                 xaxis = dict(title = 'Date'),
+                 yaxis = dict(title = 'Motion intensity'),
+              )
+        
+    figure={
+        'data': [data],
+        'layout': layout
+    }
+    return figure
 
 
 
