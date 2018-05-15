@@ -9,6 +9,8 @@ from flask import Flask,request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import plotly.graph_objs as go
+import pytz
+from datetime import timezone
 
 app = dash.Dash(__name__)
 server = app.server # the Flask app
@@ -17,6 +19,8 @@ server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(server)
 migrate = Migrate(server, db)
+local_tz = pytz.timezone('Israel')
+
 
 class Feed(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -45,7 +49,7 @@ def update():
         for sample in samples:
             new_sample = Sample(feed_id=feed.id,
                                  value=sample['value'],
-                                 time=datetime.fromtimestamp(sample['time']))
+                                 time=datetime.fromtimestamp(sample['time']).replace(tzinfo=timezone.utc).astimezone(tz=local_tz))
             db.session.add(new_sample)
         db.session.commit()
             
@@ -57,7 +61,7 @@ app.layout = html.Div(children=[
     html.H1(children='Iliso Home Dashboard'),
 
     html.Div(children='''
-        Feed coverage
+
     '''),
 
     dcc.Graph(
@@ -65,7 +69,7 @@ app.layout = html.Div(children=[
     ),
      dcc.Interval(
             id='interval-component',
-            interval=1*1000, # in milliseconds
+            interval=60*1000, # in milliseconds
             n_intervals=0
         )
 ])
@@ -78,26 +82,96 @@ def update_graph_live(n):
     if motion_feed is None:
         return
 
-    x = []
-    y = []
+    motion_x = []
+    motion_y = []
     for sample in motion_feed.samples:
-        x.append(sample.time)
-        y.append(sample.value)
-
+        motion_x.append(sample.time)
+        motion_y.append(sample.value)
     data = go.Scatter(
-        x = x,
-        y = y,
+        x = motion_x,
+        y = motion_y,
         name = 'motion',
         mode = 'line'
     )
 
-    layout = dict(title = 'motion',
-                 xaxis = dict(title = 'Date'),
-                 yaxis = dict(title = 'Motion intensity'),
+    temp_feed = Feed.query.filter_by(name='temperature').first()
+    if temp_feed is None:
+        return
+    temp_x = []
+    temp_y = []
+    for sample in temp_feed.samples:
+        temp_x.append(sample.time)
+        temp_y.append(sample.value)
+        
+    temp_data = go.Scatter(
+        x = temp_x,
+        y = temp_y,
+        name = 'temperature',
+        mode = 'line',
+        yaxis='y2'
+    )
+
+    audio_feed = Feed.query.filter_by(name='audio').first()
+    if audio_feed is None:
+        return
+    audio_x = []
+    audio_y = []
+    for sample in audio_feed.samples:
+        audio_x.append(sample.time)
+        audio_y.append(sample.value)
+        
+    audio_data = go.Scatter(
+        x = audio_x,
+        y = audio_y,
+        name = 'Noise',
+        mode = 'line',
+        yaxis='y3'
+    )
+
+    layout = dict(title = 'Home Metrics',
+
+                  xaxis=dict(
+                      # domain=[0.3, 0.7],
+                      title = 'Date'
+                  ),
+                  yaxis=dict(
+                      title='Motion',
+                      titlefont=dict(
+                          color='#1f77b4'
+                      ),
+                      tickfont=dict(
+                          color='#1f77b4'
+                      )
+                  ),
+                  yaxis2=dict(
+                      titlefont=dict(
+                          color='#ff7f0e'
+                      ),
+                      tickfont=dict(
+                          color='#ff7f0e'
+                      ),
+                      anchor='free',
+                      overlaying='y',
+                      side='left',
+                      position=0.1,
+                      title='Temperature'
+                  ),
+                  yaxis3=dict(
+                      title='Noise',
+                      titlefont=dict(
+                          color='#d62728'
+                      ),
+                      tickfont=dict(
+                          color='#d62728'
+                      ),
+                      anchor='x',
+                      overlaying='y',
+                      side='right'
+                  ),
               )
         
     figure={
-        'data': [data],
+        'data': [data,temp_data,audio_data],
         'layout': layout
     }
     return figure
