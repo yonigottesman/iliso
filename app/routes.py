@@ -1,26 +1,36 @@
 from datetime import datetime
 import time
-import dash
+
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly
 from dash.dependencies import Input, Output
 from flask import Flask,request
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+
 import plotly.graph_objs as go
 import pytz
 from datetime import timezone
+from app import db,server,app
 
-app = dash.Dash(__name__)
-server = app.server # the Flask app
-server.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(server)
-migrate = Migrate(server, db)
 local_tz = pytz.timezone('Israel')
 
+app.layout = html.Div(children=[
+    html.H1(children='Iliso Home Dashboard'),
+
+    html.Div(children='''
+
+    '''),
+
+    dcc.Graph(
+        id='coverage-graph'
+    ),
+     dcc.Interval(
+            id='interval-component',
+            interval=60*1000, # in milliseconds
+            n_intervals=0
+        )
+])
 
 class Feed(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +44,8 @@ class Sample(db.Model):
     value = db.Column(db.Float)
     time = db.Column(db.DateTime)
 
+    
+    
 @server.route('/update', methods=['GET', 'POST'])
 def update():
     content = request.get_json(silent=False)
@@ -56,23 +68,6 @@ def update():
         
     return 'update success'
     
-
-app.layout = html.Div(children=[
-    html.H1(children='Iliso Home Dashboard'),
-
-    html.Div(children='''
-
-    '''),
-
-    dcc.Graph(
-        id='coverage-graph'
-    ),
-     dcc.Interval(
-            id='interval-component',
-            interval=60*1000, # in milliseconds
-            n_intervals=0
-        )
-])
 
 @app.callback(Output('coverage-graph', 'figure'),
               [Input('interval-component', 'n_intervals')])
