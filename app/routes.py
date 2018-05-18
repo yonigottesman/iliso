@@ -116,7 +116,22 @@ def update_graph_live(n):
 
                   xaxis=dict(
                       # domain=[0.3, 0.7],
-                      title = 'Date'
+                      title = 'Date',
+                      rangeselector=dict(
+                          buttons=list([
+                              dict(count=1,
+                                   label='1day',
+                                   step='day',
+                                   stepmode='backward'),
+                              dict(count=7,
+                                   label='1week',
+                                   step='day',
+                                   stepmode='backward'),
+                              dict(step='all')
+                          ])
+                      ),
+                      rangeslider=dict(),
+                      type='date'
                   ),
                   yaxis=dict(
                       title='Motion',
