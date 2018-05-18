@@ -58,8 +58,8 @@ def update():
             db.session.commit()
         for sample in samples:
             new_sample = Sample(feed_id=feed.id,
-                                 value=sample['value'],
-                                 time=datetime.fromtimestamp(sample['time']).replace(tzinfo=timezone.utc).astimezone(tz=local_tz))
+                                value=sample['value'],
+                                time=datetime.fromtimestamp(sample['time']).replace(tzinfo=timezone.utc).astimezone(tz=local_tz).replace(tzinfo=None))
             db.session.add(new_sample)
         db.session.commit()
             
@@ -78,7 +78,7 @@ def update_graph_live(n):
     motion_x = []
     motion_y = []
     for sample in motion_feed.samples.order_by(Sample.time):
-        motion_x.append(sample.time.replace(tzinfo=None))
+        motion_x.append(sample.time)
         motion_y.append(sample.value)
     data = go.Scatter(
         x = motion_x,
@@ -93,7 +93,7 @@ def update_graph_live(n):
     temp_x = []
     temp_y = []
     for sample in temp_feed.samples.order_by(Sample.time):
-        temp_x.append(sample.time.replace(tzinfo=None))
+        temp_x.append(sample.time)
         temp_y.append(sample.value)
         
     temp_data = go.Scatter(
@@ -110,7 +110,7 @@ def update_graph_live(n):
     audio_x = []
     audio_y = []
     for sample in audio_feed.samples.order_by(Sample.time):
-        audio_x.append(sample.time.replace(tzinfo=None))
+        audio_x.append(sample.time)
         audio_y.append(sample.value)
         
     audio_data = go.Scatter(
