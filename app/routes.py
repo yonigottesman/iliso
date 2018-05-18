@@ -21,15 +21,24 @@ app.layout = html.Div(children=[
     html.Div(children='''
 
     '''),
+    dcc.Dropdown(
+        id='sensor-input',
+        options=[{'label': 'Motion', 'value': 'MOTION'},
+                 {'label': 'Temperature', 'value': 'TEMP'},
+                 {'label': 'Noise', 'value': 'NOISE'}],
+        value=['MOTION', 'TEMP','NOISE'],
+        multi=True
+    ),
 
+    
     dcc.Graph(
         id='coverage-graph'
     ),
-     dcc.Interval(
-            id='interval-component',
-            interval=60*1000, # in milliseconds
-            n_intervals=0
-        )
+    dcc.Interval(
+        id='interval-component',
+        interval=60*1000, # in milliseconds
+        n_intervals=0
+    )
 ])
 
 
@@ -69,7 +78,7 @@ def update_graph_live(n):
     motion_x = []
     motion_y = []
     for sample in motion_feed.samples.order_by(Sample.time):
-        motion_x.append(sample.time)
+        motion_x.append(sample.time.replace(tzinfo=None))
         motion_y.append(sample.value)
     data = go.Scatter(
         x = motion_x,
@@ -84,7 +93,7 @@ def update_graph_live(n):
     temp_x = []
     temp_y = []
     for sample in temp_feed.samples.order_by(Sample.time):
-        temp_x.append(sample.time)
+        temp_x.append(sample.time.replace(tzinfo=None))
         temp_y.append(sample.value)
         
     temp_data = go.Scatter(
@@ -101,7 +110,7 @@ def update_graph_live(n):
     audio_x = []
     audio_y = []
     for sample in audio_feed.samples.order_by(Sample.time):
-        audio_x.append(sample.time)
+        audio_x.append(sample.time.replace(tzinfo=None))
         audio_y.append(sample.value)
         
     audio_data = go.Scatter(
