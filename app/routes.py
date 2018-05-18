@@ -68,7 +68,7 @@ def update_graph_live(n):
 
     motion_x = []
     motion_y = []
-    for sample in motion_feed.samples:
+    for sample in motion_feed.samples.order_by(models.Sample.time):
         motion_x.append(sample.time)
         motion_y.append(sample.value)
     data = go.Scatter(
@@ -83,7 +83,7 @@ def update_graph_live(n):
         return
     temp_x = []
     temp_y = []
-    for sample in temp_feed.samples:
+    for sample in temp_feed.samples.order_by(models.Sample.time):
         temp_x.append(sample.time)
         temp_y.append(sample.value)
         
@@ -100,7 +100,7 @@ def update_graph_live(n):
         return
     audio_x = []
     audio_y = []
-    for sample in audio_feed.samples:
+    for sample in audio_feed.samples.order_by(models.Sample.time):
         audio_x.append(sample.time)
         audio_y.append(sample.value)
         
