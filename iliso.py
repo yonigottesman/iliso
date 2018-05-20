@@ -1,7 +1,7 @@
-from app import server,app,db
-from app.models import Feed,Sample
+from app import server, app, db
+from app.models import Feed, Sample
+
 
 @server.shell_context_processor
 def make_shell_context():
         return {'db': db, 'Sample': Sample, 'Feed': Feed}
-    
