@@ -5,12 +5,13 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from flask import Flask, request
 import plotly.graph_objs as go
+from threading import Thread
 
 import pytz
 from datetime import timezone
 from app import db, server, app
 from app.models import Feed, Sample
-
+import time
 local_tz = pytz.timezone('Israel')
 
 app.layout = html.Div(children=[
@@ -38,6 +39,12 @@ app.css.append_css({
 })
 
 
+def clean_history():
+    for s in Sample.query.order_by(Sample.time).limit(100):
+        db.session.delete(s)
+    db.session.commit()
+
+
 @server.route('/update', methods=['GET', 'POST'])
 def update():
     content = request.get_json(silent=False)
@@ -58,6 +65,9 @@ def update():
                                 .astimezone(tz=local_tz).replace(tzinfo=None))
             db.session.add(new_sample)
         db.session.commit()
+
+    if len(Sample.query.all()) >= 9900:
+        Thread(target=clean_history).start()
 
     return 'update success'
 
